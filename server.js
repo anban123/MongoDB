@@ -40,13 +40,20 @@ mongoose.connect("mongodb://localhost/MongoDB-HW", { useNewUrlParser: true });
 // var db = mongojs(databaseUrl, collections);
 
 // This makes sure that any errors are logged if mongodb runs into an issue
-db.on("error", function(error) {
-  console.log("Database Error:", error);
-});
+// db.on("error", function(error) {
+//   console.log("Database Error:", error);
+// });
 
 // Routes
+//======================================================================
 
-// A GET route for scraping from the source websites
+// GET route to render home html page
+
+// GET route to render saved html page
+
+// GET route to pull up notes modal (optional?)
+
+// GET route for scraping websites
 app.get("/scrape", function(req, res) {
 
 // Make a request via axios to grab the HTML body from the site of your choice
@@ -82,17 +89,13 @@ app.get("/scrape", function(req, res) {
         // If an error occured, log it
         console.log(err);
       });
-
-      // Save these results in an object that we'll push into the results array we defined earlier
-      // results.push({
-      //   source: "Realtor Magazine",
-      //   title: title,
-      //   link: link
-      // });
     });
 
+    // Send a message to the client
+    res.send("Scrape Complete");
+
     // Log the results once you've looped through each of the elements found with cheerio
-    console.log(results);
+    // console.log(results);
   });
 
   // Source 2 Realtor.com
@@ -101,18 +104,20 @@ app.get("/scrape", function(req, res) {
     var $ = cheerio.load(response.data);
 
     $("h2.entry-title").each(function(i, element) {
+      var result = {};
+      result.source = "Realtor.com"
+      result.title = $(element).children().text();
+      result.link = $(element).find("a").attr("href");
 
-      var title = $(element).children().text();
-      var link = $(element).find("a").attr("href");
-
-      results.push({
-        source: "Realtor.com", 
-        title: title,
-        link: link
-      });
+      db.Article.create(result)
+        .then(function(dbArticle) {
+          console.log(dbArticle);
+        })
+        .catch(function(err) {
+          console.log(err);
+        })
     });
-
-    console.log(results);
+    res.send("Scrape Complete");
   });
 
   // Source 3 Forbes 
@@ -121,17 +126,20 @@ app.get("/scrape", function(req, res) {
     var $ = cheerio.load(response.data);
 
     $("div.stream-item__text").each(function(i, element) {
+      var result = {};
+      result.source = "Forbes"
+      result.title = $(element).find("a").text();
+      result.link = $(element).find("a").attr("href");
 
-      var title = $(element).find("a").text();
-      var link = $(element).find("a").attr("href");
-
-      results.push({
-        source: "Forbes",
-        title: title,
-        link: link
+      db.Article.create(result)
+      .then(function(dbArticle) {
+        console.log(dbArticle);
+      })
+      .catch(function(err) {
+        console.log(err);
       });
     });
-    console.log(results);
+    res.send("Scrape Complete");
   });
 
   // Source 4 NY Times
@@ -140,17 +148,20 @@ app.get("/scrape", function(req, res) {
     var $ = cheerio.load(response.data);
 
     $("div.story-body").each(function(i, element) {
+      var result = {};
+      result.source = "New York Times"
+      result.title = $(element).find("h2").text();
+      result.link = $(element).find("a").attr("href");
 
-      var title = $(element).find("h2").text();
-      var link = $(element).find("a").attr("href");
-
-      results.push({
-        source: "New York Times",
-        title: title,
-        link: link
-      });
+      db.Article.create(result)
+        .then(function(dbArticle) {
+          console.log(dbArticle);
+        })
+        .catch(function(err) {
+          console.log(err);
+        });
     });
-    console.log(results);
+    res.send("Scrape Complete")
   });
 
   // Source 5 CCIM
@@ -159,16 +170,89 @@ app.get("/scrape", function(req, res) {
     var $ = cheerio.load(response.data);
 
     $("dt").each(function(i, element) {
+      var result = {};
+      result.source = "CCIM"
+      result.title = $(element).find("a").text();
+      result.link = $(element).find("a").attr("href");
 
-      var title = $(element).find("a").text();
-      var link = $(element).find("a").attr("href");
-
-      results.push({
-        source: "CCIM",
-        title: title,
-        link: link
-      });
+      db.Article.create(result)
+        .then(function(dbArticle) {
+          console.log(dbArticle);
+        })
+        .catch(function(err) {
+          console.log(err);
+        });
     });
-    console.log(results);
+    res.send("Scrape Complete")
   });
 });
+
+// Route for getting all Articles from the db
+app.get("/articles", function(req, res) {
+  // Grab every document in the Article's collection
+  db.Article.find({})
+    .then(function(dbArticle) {
+      // If we were able to successfully find Articles, send them back to the client
+      res.json(dbArticle);
+    })
+    .catch(function(err) {
+      // If an err occured, send it to the client
+      res.json(err);
+    });
+});
+
+// GET route to grab ALL articles from database
+
+// GET route to grab specific article by it's ID and populate it with it's notes
+
+// POST route to save a specific article (ie. use req.params.id to grab id of specific article)
+
+// POST route to delete an article (optional)
+
+// POST route to create a new note (and associate it with it's article)
+
+// DELETE route to delete a note (optional)
+
+
+
+
+
+
+
+//Notes
+// // Route for grabbing a specific Article by id, populate it with it's note
+// app.get("/articles/:id", function(req, res) {
+//   // Using the id passed in the id parameter, prepare a query that finds the matching one in our db...
+//   db.Article.findOne({ __id: req.params.id })
+//     // ..and populate all of the notes associated with it
+//     .populate("note")
+//     .then(function(dbArticle) {
+//       // If we were able to successfully find an Article with the given id, send it back to the client
+//       res.json(dbArticle);
+//     })
+//     .catch(function(err) {
+//       // If an error occurred, send it to the client
+//       res.json(err);
+//     });
+// });
+
+// // Route for saving/updating an Article's associated Note
+// app.post("/articles/:id", function(req, res) {
+//   // Create a new note and pass the req.body to the entry
+//   db.Note.create(req.body)
+//     .then(function(dbNote) {
+//       // If a Note was created successfully, find one Article with an `_id` equal to `req.params.id`. Update the Article to be associated with the new Note
+//       // { new: true } tells the query that we want it to return the updated User -- it returns the original by default
+//       // Since our mongoose query returns a promise, we can chain another `.then` which receives the result of the query
+//       res.json(dbArticle);
+//     })
+//     .catch(function(err) {
+//       // If an error occurred, send it to the client
+//       res.json(err);
+//     });
+// });
+
+// // Start the server
+// app.listen(PORT, function() {
+//   console.log("App running on port " + PORT + "!");
+// });
