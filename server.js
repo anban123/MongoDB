@@ -31,27 +31,21 @@ app.use(express.static("public"));
 // Connect to the Mongo DB
 mongoose.connect("mongodb://localhost/MongoDB-HW", { useNewUrlParser: true });
 
-// Database configuration -----------------------------------------------------NEEDED???
-// Save the URL of our database as well as the name of our collection
-// var databaseUrl = "MongoDB-HW";
-// var collections = ["articles"];
- 
-// Use mongojs to hook the database to the db variable-------------------------NEEDED???
-// var db = mongojs(databaseUrl, collections);
-
-// This makes sure that any errors are logged if mongodb runs into an issue
-// db.on("error", function(error) {
-//   console.log("Database Error:", error);
-// });
-
 // Routes
 //======================================================================
 
 // GET route to render home html page
+app.get("/", function(req, res) {
+  res.render("index");
+});
 
 // GET route to render saved html page
+app.get("/saved", function(req, res) {
+  res.render("saved");
+});
 
 // GET route to pull up notes modal (optional?)
+app.get("???")
 
 // GET route for scraping websites
 app.get("/scrape", function(req, res) {
@@ -189,25 +183,93 @@ app.get("/scrape", function(req, res) {
 
 // Route for getting all Articles from the db
 app.get("/articles", function(req, res) {
-  // Grab every document in the Article's collection
-  db.Article.find({})
+  db.article.find({})
     .then(function(dbArticle) {
-      // If we were able to successfully find Articles, send them back to the client
       res.json(dbArticle);
     })
     .catch(function(err) {
-      // If an err occured, send it to the client
       res.json(err);
     });
 });
 
-// GET route to grab ALL articles from database
+// GET route to clear the database 
+app.get("/clearall", function(req, res) {
+  db.articles.remove({}, function(error, response) {
+    if (error) {
+      console.log(error);
+      res.send(error);
+    }
+    else {
+      console.log(response);
+      res.send(response);
+    }
+  });
+});
 
 // GET route to grab specific article by it's ID and populate it with it's notes
+app.get("/articles/:id", function(req, res) {
+  db.articles.findOne(
+    {
+      _id: mongojs.ObjectID(req.params.id)
+    },
+    function(error, found) {
+      if (error) {
+        console.log(error);
+        res.send(error);
+      }
+      else {
+        console.log(found);
+        res.send(found);
+      }
+    }
+  );
+});
 
 // POST route to save a specific article (ie. use req.params.id to grab id of specific article)
+app.post("/update/:id", function(req, res) {
+  db.articles.update(
+    {
+      _id: mongojs.ObjectId(req.params.id)
+    },
+    {
+      $set: {
+        source: req.body.source,
+        title: req.body.title,
+        link: req.body.link,
+        modified: Date.now()
+      }
+    },
+    function(error, data) {
+      if (error) {
+        console.log(error);
+        res.send(error);
+      }
+      else {
+        console.log(data);
+        res.send(data);
+      }
+    }
+  );
+});
 
 // POST route to delete an article (optional)
+app.get("/delete/:id", function(req, res) {
+  db.articles.remove(
+    {
+      _id: mongojs.ObjectID(req.params.id)
+    },
+    function(error, removed) {
+      if (error) {
+        console.log(error);
+        res.send(error);
+      }
+      else {
+        console.log(removed);
+        res.send(removed);
+      }
+    }
+  );
+});
 
 // POST route to create a new note (and associate it with it's article)
 
@@ -256,3 +318,8 @@ app.get("/articles", function(req, res) {
 // app.listen(PORT, function() {
 //   console.log("App running on port " + PORT + "!");
 // });
+
+// Listen on port 3000
+app.listen(3000, function() {
+  console.log("App running on port 3000!");
+});

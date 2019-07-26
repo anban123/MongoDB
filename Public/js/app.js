@@ -7,7 +7,6 @@ $("#scrape").on("click", function(event) {
 
     //send this to/trigger server.js to run scraping...
 
-    // Grab the articles as a json ---------------------------separate????
     $.getJSON("/articles", function(data) {
         // For each one
         for (var i = 0; i < data.length; i++) {
@@ -30,9 +29,7 @@ $("#scrape").on("click", function(event) {
 // Click event for the Clear Articles button
 $("#clear").on("click", function() {
     event.preventDefault();
-
     console.log("Clear button works");
-
     $(".card").empty();
 });
 
@@ -46,6 +43,7 @@ $("#clear").on("click", "#full-article", function() {
 });
 
 // Handle Save Article button
+
 
 // Handle Delete Article button
 
